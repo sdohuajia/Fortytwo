@@ -56,7 +56,7 @@ install_fortytwo() {
 # 重新启动 Fortytwo 节点函数
 restart_fortytwo() {
     echo "重新启动 Fortytwo 节点..."
-    if [ -d "~/Fortytwo/fortytwo-console-app-main" ]; then
+    if [ -d "/root/Fortytwo/fortytwo-console-app-main" ]; then
         cd /root/Fortytwo/fortytwo-console-app-main
         if [ -f "linux.sh" ]; then
             chmod +x linux.sh
