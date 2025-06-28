@@ -10,20 +10,52 @@ fi
 # 脚本保存路径
 SCRIPT_PATH="$HOME/Fortytwo.sh"
 
-# 安装 Fortytwo 函数
-install_fortytwo() {
-    # 更新系统并检查/安装 unzip
-    echo "更新系统包并检查依赖..."
+# 安装依赖函数
+install_dependencies() {
+    echo "检查并安装依赖 (curl, unzip)..."
     if [ -x "$(command -v apt-get)" ]; then
+        # Debian/Ubuntu-based
         apt-get update
+        if ! command -v curl &> /dev/null; then
+            echo "curl 未安装，正在安装..."
+            apt-get install -y curl
+        fi
         if ! command -v unzip &> /dev/null; then
             echo "unzip 未安装，正在安装..."
             apt-get install -y unzip
         fi
+    elif [ -x "$(command -v apk)" ]; then
+        # Alpine-based
+        apk update
+        if ! command -v curl &> /dev/null; then
+            echo "curl 未安装，正在安装..."
+            apk add curl
+        fi
+        if ! command -v unzip &> /dev/null; then
+            echo "unzip 未安装，正在安装..."
+            apk add unzip
+        fi
+    elif [ -x "$(command -v yum)" ]; then
+        # Red Hat/CentOS-based
+        yum makecache
+        if ! command -v curl &> /dev/null; then
+            echo "curl 未安装，正在安装..."
+            yum install -y curl
+        fi
+        if ! command -v unzip &> /dev/null; then
+            echo "unzip 未安装，正在安装..."
+            yum install -y unzip
+        fi
     else
-        echo "错误: 未检测到 apt-get，当前脚本仅支持基于 Debian/Ubuntu 的系统"
+        echo "错误: 未检测到 apt-get、apk 或 yum，当前脚本不支持此系统"
         exit 1
     fi
+}
+
+# 安装 Fortytwo 函数
+install_fortytwo() {
+    # 安装依赖
+    install_dependencies
 
     # 创建目录并进入
     echo "创建并进入 Fortytwo 目录..."
@@ -32,10 +64,18 @@ install_fortytwo() {
     # 下载 zip 文件到 Fortytwo 目录
     echo "下载 fortytwo-console-app 到 ~/Fortytwo..."
     curl -L -o ~/Fortytwo/fortytwo-console-app.zip https://github.com/Fortytwo-Network/fortytwo-console-app/archive/refs/heads/main.zip
+    if [ $? -ne 0 ]; then
+        echo "错误: 下载 fortytwo-console-app.zip 失败，请检查网络连接或 URL"
+        exit 1
+    fi
 
     # 解压文件到 Fortytwo 目录
     echo "解压 fortytwo-console-app.zip 到 ~/Fortytwo..."
     unzip ~/Fortytwo/fortytwo-console-app.zip -d ~/Fortytwo
+    if [ $? -ne 0 ]; then
+        echo "错误: 解压 fortytwo-console-app.zip 失败，请检查文件是否正确"
+        exit 1
+    fi
 
     # 删除压缩包
     echo "删除 fortytwo-console-app.zip..."
@@ -43,11 +83,25 @@ install_fortytwo() {
 
     # 进入解压后的目录
     echo "进入 fortytwo-console-app-main 目录..."
-    cd ~/Fortytwo/fortytwo-console-app-main
+    if [ -d "~/Fortytwo/fortytwo-console-app-main" ]; then
+        cd ~/Fortytwo/fortytwo-console-app-main
+    else
+        echo "错误: fortytwo-console-app-main 目录不存在"
+        exit 1
+    fi
 
     # 赋予执行权限并运行脚本
     echo "设置并运行 linux.sh..."
-    chmod +x linux.sh && ./linux.sh
+    if [ -f "linux.sh" ]; then
+        chmod +x linux.sh && ./linux.sh
+        if [ $? -ne 0 ]; then
+            echo "错误: linux.sh 执行失败"
+            exit 1
+        fi
+    else
+        echo "错误: linux.sh 文件不存在"
+        exit 1
+    fi
 
     echo "安装完成！按任意键返回主菜单..."
     read -n 1
@@ -61,12 +115,16 @@ restart_fortytwo() {
         if [ -f "linux.sh" ]; then
             chmod +x linux.sh
             ./linux.sh
+            if [ $? -ne 0 ]; then
+                echo "错误: linux.sh 执行失败"
+                exit 1
+            fi
             echo "节点重新启动完成！按任意键返回主菜单..."
         else
-            echo "错误：linux.sh 文件不存在"
+            echo "错误: linux.sh 文件不存在"
         fi
     else
-        echo "错误：fortytwo-console-app-main 目录不存在，请先安装 Fortytwo"
+        echo "错误: fortytwo-console-app-main 目录不存在，请先安装 Fortytwo"
     fi
     read -n 1
 }
