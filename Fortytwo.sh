@@ -81,13 +81,20 @@ install_fortytwo() {
     echo "删除 fortytwo-console-app.zip..."
     rm ~/Fortytwo/fortytwo-console-app.zip
 
-    # 进入解压后的目录
-    echo "进入 fortytwo-console-app-main 目录..."
-    if [ -d "~/Fortytwo/fortytwo-console-app-main" ]; then
-        cd ~/Fortytwo/fortytwo-console-app-main
+    echo "进入 Fortytwo 目录..."
+    if [ -d "$HOME/Fortytwo" ]; then
+    cd "$HOME/Fortytwo"
     else
-        echo "错误: fortytwo-console-app-main 目录不存在"
-        exit 1
+    echo "错误: Fortytwo 目录不存在"
+    exit 1
+    fi
+
+    echo "进入 fortytwo-console-app-main 目录..."
+    if [ -d "fortytwo-console-app-main" ]; then
+    cd fortytwo-console-app-main
+    else
+    echo "错误: fortytwo-console-app-main 目录不存在"
+    exit 1
     fi
 
     # 赋予执行权限并运行脚本
